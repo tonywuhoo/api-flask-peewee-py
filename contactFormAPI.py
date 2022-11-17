@@ -32,11 +32,8 @@ app = Flask(__name__)
 def index():
   return render_template("index.html")
 
-@app.route('/contactbook')
-def contactbook():
-  return jsonify(model_to_dict(contactForm.get()))
-
-@app.route('/contactbook/<id>', methods=['GET', 'PUT', 'DELETE'])
+@app.route('/contacts/', methods=['GET', 'POST'])
+@app.route('/contacts/<id>', methods=['GET', 'PUT', 'DELETE'])
 def endpoint(id=None):
   if request.method == 'GET':
     if id:
@@ -47,27 +44,18 @@ def endpoint(id=None):
             people_list.append(model_to_dict(person))
         return jsonify(people_list)
 
+  if request.method =='PUT':
+    body = request.get_json()
+    contactForm.update(body).where(contactForm.id == id).execute()
+    return "Contact " + str(id) + " has been updated."
 
+  if request.method == 'POST':
+    new_contact = dict_to_model(contactForm, request.get_json())
+    new_contact.save()
+    return jsonify({"success": True})
+
+  if request.method == 'DELETE':
+    contactForm.delete().where(contactForm.id == id).execute()
+    return "Contact " + str(id) + " deleted."
 
 app.run(port=3000, debug=True)
-
-# def inputContactForm(InputtedName, InputtedPhoneNumber, InputtedNote):
-#   newContact = contactForm(name = InputtedName, phoneNumber = InputtedPhoneNumber, note = InputtedNote)
-#   newContact.save()
-#   print("Saving contact to book, returning...")
-#   return 0
-
-# status = "running"
-# while  status == "running":
-#   toEnter = input("Would you like to enter a details to a contact book? (y/n) : ")
-#   if toEnter == "n":
-#     status = "notRunning"
-#     changeStatus = input("To start application, enter any key: ")
-#     if len(changeStatus) > 0:
-#       status = "running"
-#   elif toEnter == "y":
-#     name = input("Enter full name: ")
-#     phoneNumber = input("Enter person phone number: ")
-#     note = input("Enter note about contact person: ")
-#     inputContactForm(name,phoneNumber,note)
-
